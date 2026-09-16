@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- ============================================================
-  波普旅途 · POP TRAVEL —— 个人旅行摄影 / 二次创作作品站
+  Lil Woo游记 —— 个人旅行摄影 / 二次创作作品站
   纯单文件实现，无需安装任何环境，双击即可在浏览器打开。
 
   ★ 如何换成你自己的照片：
@@ -8,14 +8,14 @@
     2. 在下方 <script> 里找到 PHOTOS 数组，把每条记录的
        src 改成 'photos/你的照片.jpg' 即可（删掉 art 字段）；
     3. title / location / date / note / tags 照着改；
-    4. 想改站名：搜索「波普旅途」全部替换。
+    4. 想改站名：大标题、页面 title、页脚版权各改一处。
   详细说明见同目录 README.md
 ============================================================ -->
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>波普旅途 · POP TRAVEL</title>
+<title>Lil Woo游记 · 旅行摄影 & 二次创作</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📸%3C/text%3E%3C/svg%3E">
 <style>
   /* ---------- 设计变量：波普调色板 ---------- */
@@ -98,6 +98,7 @@
   .hero-title span:nth-child(2){background:var(--red);color:var(--paper);transform:rotate(2.5deg);animation-delay:.16s}
   .hero-title span:nth-child(3){background:var(--blue);color:var(--paper);transform:rotate(-2deg);animation-delay:.24s}
   .hero-title span:nth-child(4){background:var(--pink);color:var(--ink);transform:rotate(3.5deg);animation-delay:.32s}
+  .hero-title .en-tile{width:auto;padding:0 .3em;font-family:Impact,'Arial Black',var(--font-display);letter-spacing:.05em}
   .hero-sub{
     font-weight:900;font-size:clamp(1rem,2.4vw,1.3rem);letter-spacing:.06em;
     background:linear-gradient(transparent 58%,var(--yellow) 58% 94%,transparent 94%);
@@ -325,11 +326,11 @@
 
   <div class="hero-inner">
     <span class="hero-kicker">旅行摄影 & 二次创作</span>
-    <h1 class="hero-title" aria-label="波普旅途">
-      <span>波</span><span>普</span><span>旅</span><span>途</span>
+    <h1 class="hero-title" aria-label="Lil Woo游记">
+      <span class="en-tile">LIL WOO</span><span>游</span><span>记</span>
     </h1>
     <p class="hero-sub">一个把旅途照片调成高饱和的小站</p>
-    <p class="hero-en">POP·TRAVEL — SHOOT · REMIX · SHARE</p>
+    <p class="hero-en">LIL WOO'S TRAVEL — SHOOT · REMIX · SHARE</p>
     <a class="hero-cta" href="#gallery">看照片 ↓</a>
   </div>
 </header>
@@ -361,9 +362,7 @@
 <footer>
   <div class="contact reveal">
     <h2>THAT'S ALL, FOLKS!</h2>
-    <a class="sticker-link" href="mailto:hi@example.com">✉️ 邮箱</a>
-    <a class="sticker-link" href="https://github.com/yourname" target="_blank" rel="noopener">🐙 GitHub</a>
-    <a class="sticker-link" href="#">📕 小红书</a>
+    <a class="sticker-link" href="https://github.com/LilWooNice" target="_blank" rel="noopener">🐙 GitHub 主页</a>
   </div>
   <div class="marquee blue" aria-hidden="true">
     <div class="marquee-track" id="mqBottom">
@@ -373,7 +372,7 @@
       </div>
     </div>
   </div>
-  <p class="copyright">© <span id="year"></span> 波普旅途 · 用 ZCode 做的，用相机喂饱的</p>
+  <p class="copyright">© <span id="year"></span> Lil Woo游记 · 用 ZCode 做的，用相机喂饱的</p>
 </footer>
 
 <!-- 灯箱 -->
