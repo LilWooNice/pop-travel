@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<!-- ============================================================
+  波普旅途 · POP TRAVEL —— 个人旅行摄影 / 二次创作作品站
+  纯单文件实现，无需安装任何环境，双击即可在浏览器打开。
+
+  ★ 如何换成你自己的照片：
+    1. 在本文件同级目录建一个 photos/ 文件夹，把照片放进去；
+    2. 在下方 <script> 里找到 PHOTOS 数组，把每条记录的
+       src 改成 'photos/你的照片.jpg' 即可（删掉 art 字段）；
+    3. title / location / date / note / tags 照着改；
+    4. 想改站名：搜索「波普旅途」全部替换。
+  详细说明见同目录 README.md
+============================================================ -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>波普旅途 · POP TRAVEL</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📸%3C/text%3E%3C/svg%3E">
+<style>
+  /* ---------- 设计变量：波普调色板 ---------- */
+  :root{
+    --ink:#101010;
+    --paper:#FFF3DC;
+    --red:#FF4B33;
+    --blue:#2B50FF;
+    --yellow:#FFC800;
+    --pink:#FF8DC7;
+    --green:#00B47E;
+    --orange:#FF8A00;
+    --border:3px solid var(--ink);
+    --shadow:8px 8px 0 var(--ink);
+    --font-display:'Arial Black','Arial Bold',Impact,'Microsoft YaHei',sans-serif;
+    --font-body:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--font-body);
+    background:var(--paper);
+    color:var(--ink);
+    overflow-x:hidden;
+    /* 纸面上的细网点 */
+    background-image:radial-gradient(rgba(16,16,16,.07) 1.1px, transparent 1.2px);
+    background-size:14px 14px;
+  }
+  ::selection{background:var(--yellow)}
+  html.lb-open{overflow:hidden}
+
+  /* ---------- 顶部跑马灯 ---------- */
+  .marquee{
+    overflow:hidden;border-bottom:var(--border);
+    background:var(--red);color:var(--paper);
+  }
+  .marquee.blue{background:var(--blue);border-top:var(--border)}
+  .marquee-track{display:flex;width:max-content;animation:slide 26s linear infinite}
+  .marquee-group{display:flex;align-items:center;gap:2.2rem;padding:.55rem 1.1rem .55rem 2.2rem;
+    font-family:var(--font-display);font-weight:900;font-size:.95rem;letter-spacing:.12em;white-space:nowrap}
+  .marquee-group em{font-style:normal;color:var(--yellow)}
+  @keyframes slide{to{transform:translateX(-50%)}}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;padding:clamp(4rem,9vw,7rem) clamp(1.2rem,5vw,4rem) clamp(3rem,7vw,5rem);overflow:hidden}
+  .hero-bg-word{
+    position:absolute;top:38%;left:-3%;transform:rotate(-6deg);
+    font-family:Impact,var(--font-display);font-weight:900;
+    font-size:clamp(7rem,24vw,21rem);line-height:1;letter-spacing:.02em;
+    color:transparent;-webkit-text-stroke:3px rgba(16,16,16,.5);
+    user-select:none;pointer-events:none;white-space:nowrap;
+  }
+  .hero-halftone{
+    position:absolute;top:-12%;right:-8%;width:46vmin;height:46vmin;border-radius:50%;
+    background-image:radial-gradient(var(--ink) 1.6px, transparent 1.7px);
+    background-size:13px 13px;opacity:.16;transform:rotate(12deg);
+  }
+  .hero-blob{position:absolute;border:var(--border)}
+  .hero-blob.b1{width:120px;height:120px;border-radius:50%;background:var(--blue);right:12%;top:14%;box-shadow:6px 6px 0 var(--ink)}
+  .hero-blob.b2{width:56px;height:56px;background:var(--green);left:6%;bottom:12%;transform:rotate(18deg);box-shadow:5px 5px 0 var(--ink)}
+  .hero-blob.b3{width:90px;height:26px;background:var(--pink);right:30%;bottom:8%;transform:rotate(-8deg);box-shadow:5px 5px 0 var(--ink)}
+
+  .hero-inner{position:relative;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:1.6rem}
+  .hero-kicker{
+    display:inline-block;background:var(--ink);color:var(--paper);
+    font-weight:900;letter-spacing:.28em;font-size:.8rem;padding:.45rem 1rem .45rem 1.28rem;
+    transform:rotate(-1.5deg);box-shadow:5px 5px 0 var(--red);
+    animation:pop .55s cubic-bezier(.2,.9,.3,1.35) backwards;
+  }
+  .hero-title{display:flex;flex-wrap:wrap;gap:.35em}
+  .hero-title span{
+    display:grid;place-items:center;
+    width:clamp(68px,13vw,132px);aspect-ratio:1;
+    font-family:var(--font-display);font-weight:900;
+    font-size:clamp(40px,8.6vw,86px);
+    border:4px solid var(--ink);box-shadow:var(--shadow);
+    animation:pop .6s cubic-bezier(.2,.9,.3,1.35) backwards;
+  }
+  .hero-title span:nth-child(1){background:var(--yellow);color:var(--ink);transform:rotate(-4deg);animation-delay:.08s}
+  .hero-title span:nth-child(2){background:var(--red);color:var(--paper);transform:rotate(2.5deg);animation-delay:.16s}
+  .hero-title span:nth-child(3){background:var(--blue);color:var(--paper);transform:rotate(-2deg);animation-delay:.24s}
+  .hero-title span:nth-child(4){background:var(--pink);color:var(--ink);transform:rotate(3.5deg);animation-delay:.32s}
+  .hero-sub{
+    font-weight:900;font-size:clamp(1rem,2.4vw,1.3rem);letter-spacing:.06em;
+    background:linear-gradient(transparent 58%,var(--yellow) 58% 94%,transparent 94%);
+    padding:0 .3em;transform:rotate(-.6deg);
+    animation:pop .6s cubic-bezier(.2,.9,.3,1.35) .42s backwards;
+  }
+  .hero-en{
+    font-family:var(--font-display);font-weight:900;font-size:.85rem;
+    letter-spacing:.42em;opacity:.75;
+    animation:pop .6s cubic-bezier(.2,.9,.3,1.35) .5s backwards;
+  }
+  .hero-cta{
+    margin-top:.4rem;display:inline-block;text-decoration:none;color:var(--ink);
+    background:#fff;border:var(--border);box-shadow:var(--shadow);
+    font-weight:900;font-size:1.05rem;padding:.8rem 1.6rem;transform:rotate(-1.5deg);
+    transition:transform .18s,box-shadow .18s;
+    animation:pop .6s cubic-bezier(.2,.9,.3,1.35) .6s backwards;
+  }
+  .hero-cta:hover{transform:rotate(0) translate(-3px,-3px);box-shadow:12px 12px 0 var(--ink)}
+  .hero-cta:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--ink)}
+
+  .burst{
+    position:absolute;right:clamp(1rem,7vw,7rem);top:8%;width:clamp(110px,16vw,190px);
+    animation:wob 3.2s ease-in-out infinite alternate;
+    filter:drop-shadow(6px 6px 0 rgba(16,16,16,.9));
+    pointer-events:none;
+  }
+  @keyframes wob{from{transform:rotate(-9deg) scale(1)}to{transform:rotate(-1deg) scale(1.05)}}
+  @keyframes pop{from{opacity:0;transform:scale(.55) rotate(-9deg)}}
+
+  /* ---------- 统计贴纸条 ---------- */
+  .stats{max-width:1100px;margin:0 auto;padding:0 clamp(1.2rem,5vw,4rem) 1.2rem;
+    display:flex;gap:1.2rem;flex-wrap:wrap}
+  .stat{
+    background:#fff;border:var(--border);box-shadow:6px 6px 0 var(--ink);
+    padding:.7rem 1.3rem;font-weight:900;transform:rotate(-1deg);
+  }
+  .stat:nth-child(2){transform:rotate(1.2deg);background:var(--yellow)}
+  .stat:nth-child(3){transform:rotate(-.8deg);background:var(--pink)}
+  .stat b{font-family:var(--font-display);font-size:1.35rem;margin-right:.35em}
+
+  /* ---------- 区块标题 ---------- */
+  .sec{max-width:1100px;margin:0 auto;padding:clamp(2.6rem,6vw,4.2rem) clamp(1.2rem,5vw,4rem) 0}
+  .sec-head{display:flex;align-items:center;gap:1.2rem;margin-bottom:.6rem}
+  .sec-head h2{
+    font-family:var(--font-display);font-weight:900;
+    font-size:clamp(1.7rem,4.4vw,2.5rem);white-space:nowrap;
+  }
+  .sec-head h2 i{
+    font-style:normal;
+    background:linear-gradient(transparent 55%,var(--yellow) 55% 94%,transparent 94%);
+    padding:0 .12em;
+  }
+  .sec-head .rule{flex:1;border-top:4px dashed var(--ink);opacity:.55}
+  .sec-tip{font-weight:700;opacity:.72;margin-bottom:1.6rem}
+
+  /* ---------- 筛选贴纸 ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:.9rem;margin:1.4rem 0 2.6rem}
+  .chip{
+    font-family:var(--font-body);font-weight:900;font-size:.95rem;color:var(--ink);
+    background:#fff;border:var(--border);border-radius:999px;
+    padding:.5rem 1.15rem;cursor:pointer;box-shadow:4px 4px 0 var(--ink);
+    transform:rotate(-1deg);transition:transform .15s,box-shadow .15s,background .15s;
+  }
+  .chip:nth-child(even){transform:rotate(1.2deg)}
+  .chip:hover{transform:rotate(0) translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+  .chip.active{background:var(--ink);color:var(--paper);box-shadow:4px 4px 0 var(--red)}
+
+  /* ---------- 照片卡片 ---------- */
+  .grid{columns:3 300px;column-gap:2.2rem;padding-bottom:1rem}
+  .card{
+    --tilt:-1.6deg;
+    width:100%;break-inside:avoid;margin:0 0 2.6rem;
+    background:#fff;border:var(--border);box-shadow:var(--shadow);
+    transform:rotate(var(--tilt));
+    transition:transform .22s cubic-bezier(.2,.9,.3,1.2),box-shadow .22s;
+    cursor:pointer;text-align:left;padding:0;font:inherit;color:inherit;
+    animation:cardIn .55s cubic-bezier(.2,.9,.3,1.2) backwards;
+    animation-delay:calc(var(--i,0)*70ms);
+  }
+  .card:nth-child(4n+2){--tilt:1.9deg}
+  .card:nth-child(4n+3){--tilt:-.7deg}
+  .card:nth-child(4n){--tilt:2.5deg}
+  .card:hover,.card:focus-visible{transform:rotate(0) translate(-5px,-5px);box-shadow:15px 15px 0 var(--ink);z-index:2}
+  .card:focus-visible{outline:4px solid var(--blue);outline-offset:3px}
+  @keyframes cardIn{from{opacity:0;transform:translateY(34px) rotate(var(--tilt)) scale(.9)}}
+  .card .ph{position:relative;border-bottom:var(--border);overflow:hidden;background:var(--paper)}
+  .card .ph img{display:block;width:100%;transition:transform .35s cubic-bezier(.2,.9,.3,1.1)}
+  .card:hover .ph img{transform:scale(1.06) rotate(-.6deg)}
+  .card .tag-badge{
+    position:absolute;left:12px;bottom:12px;
+    background:var(--yellow);border:2.5px solid var(--ink);
+    font-weight:900;font-size:.78rem;padding:.2rem .6rem;transform:rotate(-2.5deg);
+  }
+  .card .date-badge{
+    position:absolute;right:12px;top:12px;
+    background:var(--paper);border:2.5px solid var(--ink);
+    font-weight:900;font-size:.74rem;padding:.15rem .55rem;transform:rotate(2deg);
+  }
+  .card .meta{padding:1.05rem 1.15rem 1.25rem}
+  .card h3{font-family:var(--font-display);font-weight:900;font-size:1.22rem;line-height:1.25}
+  .card .loc{font-weight:900;font-size:.88rem;color:var(--blue);margin:.35rem 0 .5rem}
+  .card .loc::before{content:'📍 ';font-size:.85em}
+  .card .note{font-size:.9rem;line-height:1.65;opacity:.86}
+  .card .tags{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.8rem}
+  .card .tags span{
+    font-size:.72rem;font-weight:900;border:2px solid var(--ink);
+    padding:.12rem .55rem;border-radius:999px;background:var(--paper);
+  }
+
+  /* ---------- 换照片提示贴 ---------- */
+  .howto{
+    margin-top:3.2rem;background:var(--yellow);border:var(--border);box-shadow:var(--shadow);
+    padding:1.4rem 1.6rem;transform:rotate(-.6deg);position:relative;
+  }
+  .howto::before{
+    content:'HOW TO';position:absolute;top:-1.15rem;left:1.2rem;
+    background:var(--ink);color:var(--paper);font-family:var(--font-display);
+    font-weight:900;font-size:.78rem;letter-spacing:.25em;padding:.3rem .8rem;
+    transform:rotate(-2deg);
+  }
+  .howto p{line-height:1.8;font-weight:600}
+  .howto code{
+    font-family:Consolas,Menlo,monospace;font-size:.85em;background:#fff;
+    border:2px solid var(--ink);padding:.08rem .4rem;font-weight:700;
+  }
+
+  /* ---------- 页脚 ---------- */
+  footer{margin-top:clamp(3rem,7vw,5rem)}
+  .contact{max-width:1100px;margin:0 auto;padding:2.6rem clamp(1.2rem,5vw,4rem);
+    display:flex;flex-wrap:wrap;align-items:center;gap:1.3rem}
+  .contact h2{font-family:var(--font-display);font-weight:900;font-size:clamp(1.4rem,3.4vw,2rem);margin-right:auto}
+  .sticker-link{
+    text-decoration:none;color:var(--ink);font-weight:900;font-size:.95rem;
+    background:#fff;border:var(--border);box-shadow:6px 6px 0 var(--ink);
+    padding:.65rem 1.25rem;transform:rotate(-1.5deg);
+    transition:transform .15s,box-shadow .15s;
+  }
+  .sticker-link:nth-child(even){transform:rotate(1.5deg);background:var(--pink)}
+  .sticker-link:hover{transform:rotate(0) translate(-2px,-2px);box-shadow:8px 8px 0 var(--ink)}
+  .copyright{
+    text-align:center;font-weight:700;font-size:.85rem;opacity:.7;
+    padding:1.6rem 1rem 2.2rem;
+  }
+
+  /* ---------- 灯箱 ---------- */
+  .lb{position:fixed;inset:0;z-index:60;background:rgba(16,16,16,.9);
+    display:grid;place-items:center;padding:1.6rem;
+    opacity:0;pointer-events:none;transition:opacity .22s}
+  .lb.open{opacity:1;pointer-events:auto}
+  .lb-card{
+    background:var(--paper);border:4px solid var(--ink);box-shadow:16px 16px 0 var(--yellow);
+    width:min(96vw,960px);max-height:92vh;display:grid;grid-template-columns:1.3fr 1fr;overflow:hidden;
+    transform:scale(.92) rotate(-1deg);transition:transform .25s cubic-bezier(.2,.9,.3,1.3);
+  }
+  .lb.open .lb-card{transform:scale(1) rotate(0)}
+  .lb-img{border-right:4px solid var(--ink);background:#111;min-height:280px}
+  .lb-img img{width:100%;height:100%;object-fit:contain;display:block;background:var(--paper)}
+  .lb-meta{padding:1.6rem 1.5rem;display:flex;flex-direction:column;gap:.8rem;overflow:auto}
+  .lb-meta h3{font-family:var(--font-display);font-weight:900;font-size:1.5rem;line-height:1.2}
+  .lb-loc{font-weight:900;color:var(--blue)}
+  .lb-note{line-height:1.8;font-size:.95rem}
+  .lb-tags{display:flex;flex-wrap:wrap;gap:.45rem}
+  .lb-tags span{font-size:.74rem;font-weight:900;border:2px solid var(--ink);padding:.12rem .55rem;border-radius:999px;background:#fff}
+  .lb-count{margin-top:auto;font-family:var(--font-display);font-weight:900;opacity:.6}
+  .lb-btn{
+    position:absolute;z-index:2;width:58px;height:58px;
+    background:var(--yellow);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);
+    font-family:var(--font-display);font-weight:900;font-size:1.5rem;cursor:pointer;
+    display:grid;place-items:center;transition:transform .15s,box-shadow .15s;
+  }
+  .lb-btn:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--ink)}
+  .lb-prev{left:clamp(.6rem,3vw,2.4rem);top:50%;transform:translateY(-50%)}
+  .lb-next{right:clamp(.6rem,3vw,2.4rem);top:50%;transform:translateY(-50%)}
+  .lb-prev:hover{transform:translateY(-50%) translate(-2px,-2px)}
+  .lb-next:hover{transform:translateY(-50%) translate(-2px,-2px)}
+  .lb-close{position:absolute;top:1.2rem;right:1.2rem;width:52px;height:52px;background:var(--red);color:var(--paper)}
+  .lb-close:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--ink)}
+
+  /* ---------- 入场滚动显现 ---------- */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .5s,transform .5s cubic-bezier(.2,.9,.3,1.1)}
+  .reveal.on{opacity:1;transform:none}
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width:760px){
+    .lb-card{grid-template-columns:1fr;overflow:auto}
+    .lb-img{border-right:none;border-bottom:4px solid var(--ink);min-height:200px;max-height:44vh}
+    .hero-bg-word{top:46%}
+    .burst{top:auto;bottom:4%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+    html{scroll-behavior:auto}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- 顶部跑马灯 -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track" id="mqTop">
+    <div class="marquee-group">
+      <span>📸 快门不停</span><em>✶</em><span>旅途即灵感</span><em>✶</em>
+      <span>PHOTO × POP</span><em>✶</em><span>二次创作实验室</span><em>✶</em>
+      <span>把世界调成高饱和</span><em>✶</em><span>WOW!</span><em>✶</em>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-bg-word" aria-hidden="true">TRAVEL!</div>
+  <div class="hero-halftone" aria-hidden="true"></div>
+  <div class="hero-blob b1" aria-hidden="true"></div>
+  <div class="hero-blob b2" aria-hidden="true"></div>
+  <div class="hero-blob b3" aria-hidden="true"></div>
+
+  <svg class="burst" viewBox="0 0 200 200" aria-hidden="true">
+    <polygon fill="#FF4B33" stroke="#101010" stroke-width="5"
+      points="100,4 118,38 152,18 152,58 192,56 168,88 198,112 158,120 170,160 132,146 126,188 100,158 74,188 68,146 30,160 42,120 2,112 32,88 8,56 48,58 48,18 82,38"/>
+    <text x="100" y="118" text-anchor="middle" font-family="Impact,'Arial Black',sans-serif"
+      font-size="46" fill="#FFF3DC" stroke="#101010" stroke-width="2">WOW!</text>
+  </svg>
+
+  <div class="hero-inner">
+    <span class="hero-kicker">旅行摄影 & 二次创作</span>
+    <h1 class="hero-title" aria-label="波普旅途">
+      <span>波</span><span>普</span><span>旅</span><span>途</span>
+    </h1>
+    <p class="hero-sub">一个把旅途照片调成高饱和的小站</p>
+    <p class="hero-en">POP·TRAVEL — SHOOT · REMIX · SHARE</p>
+    <a class="hero-cta" href="#gallery">看照片 ↓</a>
+  </div>
+</header>
+
+<!-- 统计贴纸 -->
+<div class="stats reveal" aria-hidden="true">
+  <div class="stat"><b id="statPhotos">0</b>张照片</div>
+  <div class="stat"><b id="statCities">0</b>个去处</div>
+  <div class="stat"><b>∞</b>种玩法</div>
+</div>
+
+<!-- 照片墙 -->
+<main class="sec" id="gallery">
+  <div class="sec-head reveal">
+    <h2>📷 <i>照片墙</i> WALL</h2>
+    <div class="rule"></div>
+  </div>
+  <p class="sec-tip reveal">点击卡片看大图和注解 · 贴纸可以按主题筛选</p>
+  <div class="chips reveal" id="chips" role="group" aria-label="按主题筛选"></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="howto reveal">
+    <p>拍摄日期还空着：想亮出日期贴纸，就打开 <code>index.html</code> 在 <code>PHOTOS</code> 数组里给每条
+      填 <code>date</code>（比如 <code>'2025.05'</code>）。以后加新照片、改文案，也都在这个数组里。</p>
+  </div>
+</main>
+
+<!-- 页脚 -->
+<footer>
+  <div class="contact reveal">
+    <h2>THAT'S ALL, FOLKS!</h2>
+    <a class="sticker-link" href="mailto:hi@example.com">✉️ 邮箱</a>
+    <a class="sticker-link" href="https://github.com/yourname" target="_blank" rel="noopener">🐙 GitHub</a>
+    <a class="sticker-link" href="#">📕 小红书</a>
+  </div>
+  <div class="marquee blue" aria-hidden="true">
+    <div class="marquee-track" id="mqBottom">
+      <div class="marquee-group">
+        <span>未完待续</span><em>✶</em><span>TO BE CONTINUED...</span><em>✶</em>
+        <span>下一站未知</span><em>✶</em><span>KEEP SHOOTING</span><em>✶</em>
+      </div>
+    </div>
+  </div>
+  <p class="copyright">© <span id="year"></span> 波普旅途 · 用 ZCode 做的，用相机喂饱的</p>
+</footer>
+
+<!-- 灯箱 -->
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="照片大图">
+  <button class="lb-btn lb-close" id="lbClose" aria-label="关闭">✕</button>
+  <button class="lb-btn lb-prev" id="lbPrev" aria-label="上一张">‹</button>
+  <button class="lb-btn lb-next" id="lbNext" aria-label="下一张">›</button>
+  <div class="lb-card">
+    <div class="lb-img"><img id="lbImg" alt=""></div>
+    <div class="lb-meta">
+      <h3 id="lbTitle"></h3>
+      <div class="lb-loc" id="lbLoc"></div>
+      <p class="lb-note" id="lbNote"></p>
+      <div class="lb-tags" id="lbTags"></div>
+      <div class="lb-count" id="lbCount"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ① 占位插画（波普风 SVG）—— 换真照片后可以整个删掉
+============================================================ */
+const HT = '<defs><pattern id="ht" width="11" height="11" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.5" fill="#111" opacity=".14"/></pattern></defs>';
+const ART = {
+  desert:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'>${HT}
+    <rect width='400' height='300' fill='#FFC800'/>
+    <circle cx='292' cy='90' r='46' fill='#FF4B33' stroke='#111' stroke-width='4'/>
+    <rect width='400' height='150' fill='url(#ht)'/>
+    <path d='M0 178 Q95 118 205 168 T400 148 V300 H0 Z' fill='#FF8A00' stroke='#111' stroke-width='5'/>
+    <path d='M0 226 Q120 176 240 218 T400 208 V300 H0 Z' fill='#E8491D' stroke='#111' stroke-width='5'/>
+    <path d='M0 268 Q160 232 320 262 T400 258 V300 H0 Z' fill='#FFB000' stroke='#111' stroke-width='5'/>
+    <path d='M70 72 q9 -10 18 0 M100 62 q9 -10 18 0' stroke='#111' stroke-width='3.5' fill='none' stroke-linecap='round'/>
+  </svg>`,
+  sea:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'>${HT}
+    <rect width='400' height='300' fill='#FFD1E8'/>
+    <circle cx='92' cy='70' r='38' fill='#FFC800' stroke='#111' stroke-width='4'/>
+    <rect width='400' height='140' fill='url(#ht)'/>
+    <rect y='140' width='400' height='160' fill='#2B50FF'/>
+    <path d='M0 168 Q25 154 50 168 T100 168 T150 168 T200 168 T250 168 T300 168 T350 168 T400 168' stroke='#fff' stroke-width='6' fill='none'/>
+    <path d='M0 208 Q25 196 50 208 T100 208 T150 208 T200 208 T250 208 T300 208 T350 208 T400 208' stroke='#7FA8FF' stroke-width='7' fill='none'/>
+    <path d='M0 250 Q25 238 50 250 T100 250 T150 250 T200 250 T250 250 T300 250 T350 250 T400 250' stroke='#fff' stroke-width='6' fill='none'/>
+    <path d='M292 214 h56 l-12 26 h-32 Z' fill='#111'/>
+    <path d='M318 214 V150 L282 208 Z' fill='#FFF3DC' stroke='#111' stroke-width='3'/>
+  </svg>`,
+  city:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'>${HT}
+    <rect width='400' height='300' fill='#12123F'/>
+    <circle cx='330' cy='58' r='30' fill='#FFC800' stroke='#111' stroke-width='4'/>
+    <circle cx='322' cy='50' r='6' fill='#E8A800'/><circle cx='340' cy='66' r='4' fill='#E8A800'/>
+    <circle cx='40' cy='40' r='2.4' fill='#fff'/><circle cx='150' cy='28' r='2' fill='#fff'/><circle cx='230' cy='52' r='2.4' fill='#fff'/><circle cx='90' cy='70' r='2' fill='#fff'/>
+    <g stroke='#111' stroke-width='3'>
+      <rect x='0' y='140' width='62' height='160' fill='#1C1C66'/>
+      <rect x='70' y='104' width='52' height='196' fill='#26267E'/>
+      <rect x='130' y='158' width='70' height='142' fill='#1C1C66'/>
+      <rect x='208' y='86' width='62' height='214' fill='#2B2B8F'/>
+      <rect x='278' y='150' width='56' height='150' fill='#26267E'/>
+      <rect x='342' y='118' width='58' height='182' fill='#1C1C66'/>
+    </g>
+    <g fill='#FFC800'>
+      <rect x='12' y='156' width='9' height='12'/><rect x='34' y='156' width='9' height='12'/><rect x='12' y='184' width='9' height='12'/>
+      <rect x='80' y='120' width='9' height='12'/><rect x='100' y='120' width='9' height='12'/><rect x='80' y='150' width='9' height='12'/><rect x='100' y='182' width='9' height='12'/>
+      <rect x='142' y='172' width='9' height='12'/><rect x='164' y='172' width='9' height='12'/><rect x='142' y='200' width='9' height='12'/>
+      <rect x='218' y='102' width='9' height='12'/><rect x='240' y='102' width='9' height='12'/><rect x='218' y='132' width='9' height='12'/><rect x='240' y='164' width='9' height='12'/>
+      <rect x='288' y='164' width='9' height='12'/><rect x='310' y='194' width='9' height='12'/>
+      <rect x='352' y='132' width='9' height='12'/><rect x='374' y='132' width='9' height='12'/><rect x='374' y='162' width='9' height='12'/>
+    </g>
+    <rect x='234' y='40' width='4' height='46' fill='#111'/><circle cx='236' cy='38' r='5' fill='#FF4B33'/>
+    <g stroke='#FFC800' stroke-width='3' opacity='.5'><path d='M60 292 h24 M180 292 h24 M300 292 h24'/></g>
+  </svg>`,
+  mountain:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'>${HT}
+    <rect width='400' height='300' fill='#FF8DC7'/>
+    <ellipse cx='86' cy='64' rx='46' ry='20' fill='#fff' stroke='#111' stroke-width='4'/>
+    <ellipse cx='320' cy='46' rx='38' ry='16' fill='#fff' stroke='#111' stroke-width='4'/>
+    <polygon points='200,58 74,214 326,214' fill='#FFFFFF' stroke='#111' stroke-width='5'/>
+    <polygon points='200,58 326,214 200,214' fill='#C9D8FF'/>
+    <polygon points='200,58 166,102 182,96 198,112 216,94 234,102' fill='#FF4B33' opacity='.85'/>
+    <ellipse cx='200' cy='268' rx='250' ry='70' fill='#00B47E' stroke='#111' stroke-width='5'/>
+    <polygon points='168,300 232,300 208,214 192,214' fill='#5A5A5A' stroke='#111' stroke-width='4'/>
+    <rect x='197' y='222' width='7' height='14' fill='#FFC800'/>
+    <rect x='195' y='248' width='10' height='18' fill='#FFC800'/>
+    <rect x='192' y='278' width='14' height='22' fill='#FFC800'/>
+  </svg>`,
+  forest:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'>${HT}
+    <rect width='400' height='300' fill='#EAF7DC'/>
+    <polygon points='0,0 170,0 0,190' fill='#fff' opacity='.35'/>
+    <circle cx='330' cy='60' r='34' fill='#FFC800' stroke='#111' stroke-width='4'/>
+    <ellipse cx='200' cy='252' rx='260' ry='86' fill='#00B47E' stroke='#111' stroke-width='5'/>
+    <ellipse cx='80' cy='286' rx='220' ry='70' fill='#0B8A5F' stroke='#111' stroke-width='5'/>
+    <g stroke='#111' stroke-width='4'>
+      <polygon points='70,220 30,110 110,110' fill='#0B6B4A'/>
+      <polygon points='150,238 112,140 188,140' fill='#0B6B4A'/>
+      <polygon points='250,230 214,146 286,146' fill='#0B6B4A'/>
+      <polygon points='330,244 296,168 364,168' fill='#0B6B4A'/>
+    </g>
+    <g fill='#5A3A1E'><rect x='62' y='220' width='14' height='26'/><rect x='142' y='238' width='14' height='24'/><rect x='242' y='230' width='14' height='24'/></g>
+    <g fill='#FFC800'><circle cx='120' cy='200' r='5'/><circle cx='210' cy='180' r='5'/><circle cx='290' cy='210' r='5'/><circle cx='60' cy='170' r='5'/></g>
+  </svg>`,
+  neon:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'>${HT}
+    <rect width='400' height='300' fill='#161033'/>
+    <circle cx='60' cy='40' r='2.4' fill='#fff'/><circle cx='200' cy='26' r='2' fill='#fff'/><circle cx='360' cy='44' r='2.4' fill='#fff'/>
+    <g stroke='#111' stroke-width='3'>
+      <rect x='0' y='60' width='120' height='240' fill='#221A52'/>
+      <rect x='280' y='80' width='120' height='220' fill='#221A52'/>
+    </g>
+    <rect x='62' y='86' width='36' height='130' rx='8' fill='#FF4FA0' opacity='.4'/>
+    <rect x='66' y='90' width='28' height='122' rx='6' fill='#FF4FA0' stroke='#111' stroke-width='3'/>
+    <rect x='150' y='60' width='32' height='140' rx='8' fill='#35E0FF' opacity='.4'/>
+    <rect x='154' y='64' width='24' height='132' rx='6' fill='#35E0FF' stroke='#111' stroke-width='3'/>
+    <rect x='236' y='96' width='96' height='40' rx='6' fill='#FFC800' stroke='#111' stroke-width='3'/>
+    <rect x='244' y='104' width='80' height='24' fill='#fff' opacity='.3'/>
+    <g stroke='#111' stroke-width='3'><line x1='200' y1='0' x2='200' y2='26'/><line x1='260' y1='0' x2='260' y2='22'/></g>
+    <circle cx='200' cy='40' r='14' fill='#FF4B33' stroke='#111' stroke-width='3'/>
+    <circle cx='260' cy='36' r='14' fill='#FF4B33' stroke='#111' stroke-width='3'/>
+    <rect y='252' width='400' height='48' fill='#0E0A26'/>
+    <g stroke-width='5' opacity='.55'><path d='M80 262 v22' stroke='#FF4FA0'/><path d='M166 262 v26' stroke='#35E0FF'/><path d='M284 262 v22' stroke='#FFC800'/></g>
+  </svg>`,
+  sky:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'>
+    <defs><clipPath id='win'><rect x='56' y='28' width='288' height='244' rx='70'/></clipPath></defs>
+    <rect width='400' height='300' fill='#E8E4F0'/>
+    <g clip-path='url(#win)'>
+      <rect x='56' y='28' width='288' height='110' fill='#FF9BC7'/>
+      <rect x='56' y='138' width='288' height='70' fill='#C9B8FF'/>
+      <rect x='56' y='208' width='288' height='64' fill='#9BD1FF'/>
+      <ellipse cx='150' cy='110' rx='52' ry='20' fill='#fff' stroke='#111' stroke-width='4'/>
+      <ellipse cx='290' cy='150' rx='46' ry='18' fill='#fff' stroke='#111' stroke-width='4'/>
+      <ellipse cx='210' cy='230' rx='60' ry='20' fill='#fff' stroke='#111' stroke-width='4'/>
+      <polygon points='56,300 200,196 236,204 120,300' fill='#8F98B5' stroke='#111' stroke-width='4'/>
+      <polygon points='200,196 236,204 214,220' fill='#FF4B33'/>
+    </g>
+    <rect x='56' y='28' width='288' height='244' rx='70' fill='none' stroke='#111' stroke-width='9'/>
+    <rect x='44' y='16' width='312' height='268' rx='80' fill='none' stroke='#111' stroke-width='5'/>
+  </svg>`,
+  collage:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'>${HT}
+    <rect width='400' height='300' fill='#FFF3DC'/>
+    <rect width='400' height='300' fill='url(#ht)'/>
+    <g transform='rotate(-9 80 60)'><rect x='-10' y='42' width='180' height='38' fill='#2B50FF' stroke='#111' stroke-width='4'/></g>
+    <g transform='rotate(7 320 250)'><rect x='240' y='238' width='190' height='36' fill='#FF8DC7' stroke='#111' stroke-width='4'/></g>
+    <polygon fill='#FF4B33' stroke='#111' stroke-width='5'
+      points='205,38 222,86 270,64 256,112 306,112 268,146 306,182 256,180 264,228 222,198 205,246 188,198 146,228 154,180 104,182 142,146 104,112 154,112 140,64 188,86'/>
+    <circle cx='205' cy='142' r='40' fill='#FFC800' stroke='#111' stroke-width='4'/>
+    <ellipse cx='205' cy='142' rx='27' ry='16' fill='#fff' stroke='#111' stroke-width='3'/>
+    <circle cx='205' cy='142' r='8' fill='#111'/>
+    <g transform='rotate(12 330 70)'><rect x='306' y='46' width='48' height='48' fill='#fff' stroke='#111' stroke-width='3'/>
+      <polygon points='330,54 336,66 350,66 339,75 343,88 330,80 317,88 321,75 310,66 324,66' fill='#FF4B33'/></g>
+    <path d='M20 268 q30 -22 60 0 t60 0 t60 0 t60 0 t60 0' stroke='#111' stroke-width='4' fill='none' stroke-linecap='round'/>
+  </svg>`
+};
+
+/* ============================================================
+   ② 照片数据 —— 把这里换成你自己的照片！
+   换真照片时：给条目加 src:'photos/xxx.jpg'（可删掉 art 字段）
+============================================================ */
+const PHOTOS = [
+  { src:'photos/太原植物园-surreal-pop-collage.jpg', title:'龙过植物园', location:'山西 · 太原', date:'',
+    note:'植物园的温室穹顶成了龙的脊背，湖水调成粉色，龙鳞是黑白的。',
+    tags:['二次创作','建筑'] },
+  { src:'photos/运城公路-zine-poster.jpg', title:'Almost there', location:'山西 · 运城', date:'',
+    note:'看到了传说中的中国最美公路——虽然它正堵成一锅粥。做成了小志海报：每一秒都快到了。',
+    tags:['二次创作','公路'] },
+  { src:'photos/鸡鸣寺-surreal-pop-collage.jpg', title:'雨天的鸡鸣寺', location:'江苏 · 南京', date:'',
+    note:'雨里全是燕子，全图去色，只留樱花的粉。',
+    tags:['二次创作','寺庙'] },
+  { src:'photos/雪王-surreal-pop-collage.jpg', title:'雪王驾到', location:'江苏 · 南京', date:'',
+    note:'南京最大的蜜雪冰城门口，雪王被涂成黑白，站在红漆大底前，月亮换成了甜筒。',
+    tags:['二次创作','街头'] },
+  { src:'photos/7d2482824b59c60d53cdce9cc8ad39de.jpg', title:'紫竹观音', location:'四川 · 安岳', date:'',
+    note:'毗卢洞的紫竹观音，自在坐，配了紫底、竹子和一路飘落的花瓣，撕纸拼贴。',
+    tags:['二次创作','造像'] },
+  { src:'photos/913ad7a31905006684b1151330d70a55.jpg', title:'问讯的佛', location:'四川 · 安岳', date:'',
+    note:'圆觉洞的释迦牟尼与弟子，黑白石佛和蓝红两个大圆，前景那只巨大的手正在打招呼。',
+    tags:['二次创作','造像'] },
+  { src:'photos/9c20b23ef6bcb7f0f9cb2d404c27d5ad.jpg', title:'持刀的关羽', location:'山西 · 运城', date:'',
+    note:'运城博物馆里的关羽木雕，背后按了一轮红日和几朵祥云。',
+    tags:['二次创作','造像'] },
+  { src:'photos/我.jpg', title:'LIL WOO · 我', location:'二次创作 · 插画', date:'',
+    note:'卡通化的自己：汽水、游戏机、刺猬和学习困难，全画进去了。',
+    tags:['人像'] },
+];
+
+/* ============================================================
+   ③ 以下为渲染逻辑，一般不用改
+============================================================ */
+const svgURI = s => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+const srcOf  = p => p.src ? p.src : svgURI(ART[p.art]);
+let currentList = PHOTOS.slice();
+let lbIndex = 0;
+
+/* 跑马灯：复制一份内容实现无缝滚动 */
+['mqTop','mqBottom'].forEach(id=>{
+  const track = document.getElementById(id);
+  track.appendChild(track.firstElementChild.cloneNode(true));
+});
+
+/* 统计 */
+document.getElementById('statPhotos').textContent = PHOTOS.length;
+document.getElementById('statCities').textContent =
+  new Set(PHOTOS.map(p=>p.location).filter(l=>l!=='待补充' && !l.includes('二次创作'))).size;
+document.getElementById('year').textContent = new Date().getFullYear();
+
+/* 筛选贴纸 */
+const tags = ['全部', ...new Set(PHOTOS.flatMap(p=>p.tags))];
+const chipsBox = document.getElementById('chips');
+tags.forEach((t,i)=>{
+  const b = document.createElement('button');
+  b.className = 'chip' + (i===0 ? ' active' : '');
+  b.textContent = t;
+  b.onclick = () => {
+    chipsBox.querySelector('.active')?.classList.remove('active');
+    b.classList.add('active');
+    renderGrid(t==='全部' ? PHOTOS : PHOTOS.filter(p=>p.tags.includes(t)));
+  };
+  chipsBox.appendChild(b);
+});
+
+/* 照片网格 */
+const grid = document.getElementById('grid');
+function renderGrid(list){
+  currentList = list;
+  grid.innerHTML = '';
+  list.forEach((p,i)=>{
+    const card = document.createElement('button');
+    card.className = 'card';
+    card.style.setProperty('--i', i);
+    card.setAttribute('aria-label', '查看 ' + p.title);
+    card.innerHTML = `
+      <div class="ph">
+        <img loading="lazy" alt="${p.title}" src="${srcOf(p)}">
+        ${p.date ? `<span class="date-badge">${p.date}</span>` : ''}
+        <span class="tag-badge">${p.tags[0]}</span>
+      </div>
+      <div class="meta">
+        <h3>${p.title}</h3>
+        <div class="loc">${p.location}</div>
+        <p class="note">${p.note}</p>
+        <div class="tags">${p.tags.map(t=>`<span>${t}</span>`).join('')}</div>
+      </div>`;
+    card.onclick = () => openLB(i);
+    grid.appendChild(card);
+  });
+}
+renderGrid(PHOTOS);
+
+/* 灯箱 */
+const lb = document.getElementById('lb');
+function openLB(i){
+  lbIndex = i;
+  const p = currentList[i];
+  document.getElementById('lbImg').src = srcOf(p);
+  document.getElementById('lbImg').alt = p.title;
+  document.getElementById('lbTitle').textContent = p.title;
+  document.getElementById('lbLoc').textContent = '📍 ' + p.location + (p.date ? ' · ' + p.date : '');
+  document.getElementById('lbNote').textContent = p.note;
+  document.getElementById('lbTags').innerHTML = p.tags.map(t=>`<span>${t}</span>`).join('');
+  document.getElementById('lbCount').textContent = (i+1) + ' / ' + currentList.length;
+  lb.classList.add('open');
+  document.documentElement.classList.add('lb-open');
+  document.getElementById('lbClose').focus();
+}
+function closeLB(){ lb.classList.remove('open'); document.documentElement.classList.remove('lb-open'); }
+function stepLB(d){ openLB((lbIndex + d + currentList.length) % currentList.length); }
+document.getElementById('lbClose').onclick = closeLB;
+document.getElementById('lbPrev').onclick = () => stepLB(-1);
+document.getElementById('lbNext').onclick = () => stepLB(1);
+lb.addEventListener('click', e => { if(e.target === lb) closeLB(); });
+document.addEventListener('keydown', e => {
+  if(!lb.classList.contains('open')) return;
+  if(e.key === 'Escape') closeLB();
+  if(e.key === 'ArrowLeft') stepLB(-1);
+  if(e.key === 'ArrowRight') stepLB(1);
+});
+
+/* 滚动显现 */
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); }
+}), {threshold:.12});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
